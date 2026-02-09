@@ -1,0 +1,15 @@
+appId: com.governor.guvnah
+productName: Guvnah
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - "!dist/renderer/src/**"
+linux:
+  target: AppImage
+  category: Development
+mac:
+  target: dmg
+win:
+  target: nsis

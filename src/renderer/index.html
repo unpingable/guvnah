@@ -2,20 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Guvnah</title>
-  <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-  <div id="app">
-    <!-- Placeholder — see ARCHITECTURE.md for first-slice features:
-         1. Session/Run Picker
-         2. Intent Modal Renderer
-         3. Receipts Inspector
-         4. Scars Timeline
-         5. Commit/Waive Flow
-    -->
-  </div>
-  <script src="app.js"></script>
+  <div id="app"></div>
+  <script type="module" src="./main.ts"></script>
 </body>
 </html>

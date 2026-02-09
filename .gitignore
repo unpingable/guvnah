@@ -3,6 +3,8 @@ dist/
 out/
 .env
 *.log
+test-results/
+playwright-report/
 
 # Electron
 release/

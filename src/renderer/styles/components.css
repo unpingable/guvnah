@@ -1,0 +1,120 @@
+/* Shared component styles */
+
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-md);
+}
+
+.card:hover {
+  border-color: var(--border-light);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm) var(--sp-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-light);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-danger {
+  border-color: var(--block);
+  color: var(--block);
+}
+
+.btn-danger:hover {
+  background: var(--block);
+  color: white;
+}
+
+.btn-sm {
+  padding: var(--sp-xs) var(--sp-sm);
+  font-size: var(--font-size-xs);
+}
+
+.input {
+  padding: var(--sp-sm) var(--sp-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  width: 100%;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-bottom: var(--sp-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--sp-sm);
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.pill-pass {
+  background: color-mix(in srgb, var(--pass), transparent 80%);
+  color: var(--pass);
+}
+
+.pill-warn {
+  background: color-mix(in srgb, var(--warn), transparent 80%);
+  color: var(--warn);
+}
+
+.pill-block {
+  background: color-mix(in srgb, var(--block), transparent 80%);
+  color: var(--block);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-xl);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.scrollable {
+  overflow-y: auto;
+  flex: 1;
+}

@@ -3,15 +3,47 @@
   "version": "0.0.1",
   "description": "Local desktop cockpit for the Governor — renders intent forms, displays receipts, mediates commits. Has no authority of its own.",
   "private": true,
-  "main": "src/main/index.js",
+  "type": "module",
+  "main": "dist/main/index.js",
   "scripts": {
-    "start": "echo 'Not yet implemented — see ARCHITECTURE.md'",
-    "dev": "echo 'Not yet implemented'",
-    "build": "echo 'Not yet implemented'",
-    "lint": "echo 'Not yet implemented'"
+    "dev": "concurrently -k \"vite build --watch\" \"tsc -p tsconfig.main.json --watch --preserveWatchOutput\" \"electron .\"",
+    "dev:renderer": "vite dev",
+    "dev:main": "tsc -p tsconfig.main.json --watch",
+    "build": "vite build && tsc -p tsconfig.main.json && node scripts/bundle-preload.mjs",
+    "build:renderer": "vite build",
+    "build:main": "tsc -p tsconfig.main.json",
+    "start": "npm run build && electron .",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test -c playwright.electron.config.ts",
+    "test:e2e:ui": "playwright test -c playwright.electron.config.ts --ui",
+    "lint": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.main.json"
   },
-  "keywords": ["governor", "governance", "desktop", "cockpit"],
-  "license": "MIT",
-  "dependencies": {},
-  "devDependencies": {}
+  "keywords": [
+    "governor",
+    "governance",
+    "desktop",
+    "cockpit"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "electron-store": "^8.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@testing-library/svelte": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "concurrently": "^9.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "jsdom": "^25.0.0",
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.0.0",
+    "vitest": "^2.0.0"
+  }
 }
