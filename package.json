@@ -1,0 +1,17 @@
+{
+  "name": "guvnah",
+  "version": "0.0.1",
+  "description": "Local desktop cockpit for the Governor — renders intent forms, displays receipts, mediates commits. Has no authority of its own.",
+  "private": true,
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "echo 'Not yet implemented — see ARCHITECTURE.md'",
+    "dev": "echo 'Not yet implemented'",
+    "build": "echo 'Not yet implemented'",
+    "lint": "echo 'Not yet implemented'"
+  },
+  "keywords": ["governor", "governance", "desktop", "cockpit"],
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}

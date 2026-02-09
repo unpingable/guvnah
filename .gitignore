@@ -1,0 +1,15 @@
+node_modules/
+dist/
+out/
+.env
+*.log
+
+# Electron
+release/
+
+# Tauri
+src-tauri/target/
+
+# OS
+.DS_Store
+Thumbs.db
