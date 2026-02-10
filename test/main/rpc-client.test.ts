@@ -170,24 +170,29 @@ describe('GovernorClient API', () => {
 });
 
 // ---------------------------------------------------------------------------
-// RpcTransport tests (transport layer)
+// StdioTransport tests (transport layer)
 // ---------------------------------------------------------------------------
 
-describe('RpcTransport', () => {
-  it('exports RpcTransport class', async () => {
-    const { RpcTransport } = await import('../../src/main/rpc-client');
-    expect(RpcTransport).toBeDefined();
+describe('StdioTransport', () => {
+  it('exports StdioTransport class', async () => {
+    const { StdioTransport } = await import('../../src/main/rpc-client');
+    expect(StdioTransport).toBeDefined();
+  });
+
+  it('exports RpcTransport as backward-compat alias', async () => {
+    const { RpcTransport, StdioTransport } = await import('../../src/main/rpc-client');
+    expect(RpcTransport).toBe(StdioTransport);
   });
 
   it('isRunning returns false when not started', async () => {
-    const { RpcTransport } = await import('../../src/main/rpc-client');
-    const transport = new RpcTransport('.governor');
+    const { StdioTransport } = await import('../../src/main/rpc-client');
+    const transport = new StdioTransport('.governor');
     expect(transport.isRunning).toBe(false);
   });
 
   it('call rejects when not running', async () => {
-    const { RpcTransport } = await import('../../src/main/rpc-client');
-    const transport = new RpcTransport('.governor');
+    const { StdioTransport } = await import('../../src/main/rpc-client');
+    const transport = new StdioTransport('.governor');
     await expect(transport.call('governor.hello')).rejects.toThrow('not running');
   });
 });

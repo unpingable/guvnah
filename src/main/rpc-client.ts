@@ -107,7 +107,19 @@ function daemonLog(stream: string, data: Buffer): void {
 }
 
 // ---------------------------------------------------------------------------
-// JSON-RPC transport over child process
+// Transport interface — the seam for future transport implementations
+// ---------------------------------------------------------------------------
+
+/** Transport abstraction for JSON-RPC communication with the governor daemon. */
+export interface Transport {
+  start(): void;
+  stop(): void;
+  get isRunning(): boolean;
+  call<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T>;
+}
+
+// ---------------------------------------------------------------------------
+// Stdio transport — child process implementation
 // ---------------------------------------------------------------------------
 
 interface PendingRequest {
@@ -116,7 +128,7 @@ interface PendingRequest {
   timer: ReturnType<typeof setTimeout>;
 }
 
-export class RpcTransport {
+export class StdioTransport implements Transport {
   private process: ChildProcess | null = null;
   private parser = new FrameParser();
   private pending = new Map<number | string, PendingRequest>();
@@ -218,6 +230,9 @@ export class RpcTransport {
   }
 }
 
+/** @deprecated Use StdioTransport instead. */
+export { StdioTransport as RpcTransport };
+
 // ---------------------------------------------------------------------------
 // Shape adapters — the compatibility seam.
 //
@@ -284,14 +299,14 @@ function adaptExceptionRecord(raw: Record<string, unknown>): ExceptionRecord {
 // ---------------------------------------------------------------------------
 
 export class GovernorClient {
-  private transport: RpcTransport;
+  private transport: Transport;
   private governorDir: string;
   private mode: string;
 
-  constructor(governorDir: string = '.governor', mode: string = 'general') {
+  constructor(governorDir: string = '.governor', mode: string = 'general', transport?: Transport) {
     this.governorDir = governorDir;
     this.mode = mode;
-    this.transport = new RpcTransport(governorDir, mode);
+    this.transport = transport ?? new StdioTransport(governorDir, mode);
   }
 
   /** Start the daemon process. Call this before using other methods. */
@@ -312,7 +327,7 @@ export class GovernorClient {
   setGovernorDir(dir: string): void {
     this.transport.stop();
     this.governorDir = dir;
-    this.transport = new RpcTransport(dir, this.mode);
+    this.transport = new StdioTransport(dir, this.mode);
     this.transport.start();
   }
 
