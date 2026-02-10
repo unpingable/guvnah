@@ -15,35 +15,61 @@
 ## Communication
 
 ```
-┌─────────────┐     UDS or loopback+token     ┌──────────────────┐
+┌─────────────┐     stdio (child process)      ┌──────────────────┐
 │   Guvnah    │ ──────────────────────────────>│  Governor Daemon  │
-│  (desktop)  │ <──────────────────────────────│  (core, local)    │
-└─────────────┘    same contract as Maude      └──────────────────┘
+│  (Electron) │ <──────────────────────────────│  (core, local)    │
+└─────────────┘  Content-Length framed JSON-RPC └──────────────────┘
 ```
 
-- **Preferred**: Unix Domain Socket (no CORS, no auth nonsense)
-- **Fallback**: loopback HTTP with bearer token
-- Uses the same endpoints Maude uses — no special "desktop" API
-- Governor runs as a local daemon; Guvnah connects on launch
+- **Transport**: `StdioTransport` spawns `governor serve --stdio` as a child process
+- Content-Length framed JSON-RPC 2.0 over stdin/stdout pipes
+- Same 25-method RPC contract as Maude
+- Governor daemon manages all state; Guvnah is stateless between calls
+
+### Transport Abstraction
+
+`GovernorClient` accepts a pluggable `Transport` interface:
+
+```typescript
+export interface Transport {
+  start(): void;
+  stop(): void;
+  get isRunning(): boolean;
+  call<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T>;
+}
+```
+
+`StdioTransport` (default) spawns the daemon as a child process. Future transports (TCP, Unix socket client) implement the same interface. `GovernorClient` constructor takes an optional third parameter:
+
+```typescript
+const client = new GovernorClient(governorDir, mode, customTransport);
+```
+
+`RpcTransport` is preserved as a backward-compatible alias for `StdioTransport`.
 
 ## Relationship to Other Shells
 
-| Shell | Purpose | Authority |
-|-------|---------|-----------|
-| **Governor** | Core constraint system | The authority |
-| **Maude** | CLI + automation client | None (client) |
-| **gov-webui** | Browser-accessible UI (remote-capable) | None (client) |
-| **Guvnah** | Best local UX, least browser pain | None (client) |
+| Shell | Purpose | Authority | Transport |
+|-------|---------|-----------|-----------|
+| **Governor** | Core constraint system | The authority | — |
+| **Maude** | TUI client | None (client) | Unix socket |
+| **gov-webui** | Browser-accessible UI | None (client) | Direct import + daemon socket (chat) |
+| **Guvnah** | Best local UX | None (client) | Stdio (child process) |
 
 All shells talk to the same contract. None can change governor semantics.
 
-## First Slice Feature Set
+## Runtime: Electron
 
-The minimum viable cockpit that proves it's worth existing:
+Guvnah ships as an Electron app:
+- **Main process**: Node.js — spawns daemon, handles IPC, manages `GovernorClient`
+- **Renderer process**: Svelte 5 — reactive UI, communicates with main via IPC
+- **Preload bridge**: Typed IPC handlers expose governor operations to the renderer
+
+## Feature Set
 
 1. **Session/Run Picker** — browse, create, resume governance sessions
-2. **Intent Modal Renderer** — render templates from `/v2/intent/schema`, submit compilations
-3. **Receipts Inspector** — browse gate receipts with evidence bundles (proof-of-verification)
+2. **Intent Modal Renderer** — render templates from `intent.schema`, submit compilations
+3. **Receipts Inspector** — browse gate receipts with evidence bundles
 4. **Scars Timeline** — visualize failure provenance, hysteresis, constraint history
 5. **Commit/Waive Flow** — explicit challenge preview before commit, waiver with receipt
 
@@ -54,20 +80,6 @@ The minimum viable cockpit that proves it's worth existing:
 - **Native notifications**: violation alerts, receipt confirmations
 - **File picker**: scope selection for tasks
 - **Window management**: persistent sidebar or floating panel mode
-
-## Runtime Decision: Electron vs Tauri
-
-Not yet decided. Trade-offs:
-
-| | Electron | Tauri |
-|---|----------|-------|
-| **Ship speed** | Faster (mature, predictable) | Slower (platform quirks) |
-| **Bundle size** | Large (Chromium + Node) | Small (native webview) |
-| **Attack surface** | Larger | Smaller |
-| **Capability model** | Looser (full Node) | Tighter (Rust backend) |
-| **Linux** | Predictable | WebKitGTK dependency |
-
-Current lean: **Electron for v1** (ship the cockpit), reevaluate later. The governor boundary work makes switching possible without rewriting the core contract.
 
 ## What Guvnah Is NOT
 
