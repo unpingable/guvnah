@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Guvnah Electron smoke tests — the "renderer doesn't explode" layer.
  *

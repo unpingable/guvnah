@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /** Scars + shields store. */
 
 import { api } from '$lib/api';

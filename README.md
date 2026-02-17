@@ -69,7 +69,7 @@ You're running Agent Governor to constrain your AI coding tools. The governor pr
 
 ### Tests
 
-- **77 unit tests** (vitest) — RPC client, IPC handlers, shape adapters, components, format utils, runes guard
+- **78 unit tests** (vitest) — RPC client, IPC handlers, shape adapters, components, format utils, runes guard
 - **2 E2E tests** (Playwright Electron) — Daemon boots + session list renders
 
 ---
@@ -185,12 +185,25 @@ rpc-client.ts          ←stdio→  daemon.py
   ├─ governor.status             ├─ ReceiptStore
   ├─ sessions.*                  ├─ ScarLedger
   ├─ intent.*                    ├─ ViolationResolver
-  ├─ receipts.*                  └─ IntentCompiler
-  ├─ scars.*
-  └─ commit.*
+  ├─ receipts.*                  ├─ IntentCompiler
+  ├─ scars.*                     ├─ CorrelatorTelemetry
+  └─ commit.*                    ├─ ScopeGovernor
+                                 └─ SemanticStability
 ```
 
-21 RPC methods total. Shape adapters in `rpc-client.ts` translate daemon Python shapes to renderer TypeScript types. This is the sole compatibility seam — when shapes change, you fix it in one place.
+21 of 36 daemon RPC methods wired. Shape adapters in `rpc-client.ts` translate daemon Python shapes to renderer TypeScript types. This is the sole compatibility seam — when shapes change, you fix it in one place.
+
+### Not Yet Wired
+
+The daemon exposes additional subsystems that Guvnah doesn't render yet:
+
+| Namespace | Methods | What It Would Show |
+|-----------|---------|-------------------|
+| `governor.selfcheck` | 1 | Deployment health checks |
+| `correlator.*` | 3 | Capture detection: K-vector (T/F/A/C), regime, indicators |
+| `scope.*` | 4 | Locality policy: grants, contracts, escalation history |
+| `stability.*` | 3 | Semantic stability: perturbation audits, stiffness, anisotropy |
+| `chat.*` | 4 | Chat generation (intentionally omitted — Guvnah observes, doesn't generate) |
 
 ---
 
@@ -215,9 +228,10 @@ British slang for "governor." Because the cockpit should be friendlier than the 
 
 | Project | What It Is |
 |---------|-----------|
-| [Agent Governor](https://github.com/unpingable/agent_governor) | The constraint system (Python, 10k+ tests) |
+| [Agent Governor](https://github.com/unpingable/agent_governor) | The constraint system (Python, 11k+ tests) |
 | [Governor WebUI](https://github.com/unpingable/governor_webui) | Web-based chat + governance dashboard (FastAPI) |
-| [Maude](https://github.com/unpingable/maude) | Python client library for the governor API |
+| [VS Code Extension](https://github.com/unpingable/vscode-governor) | IDE integration — preflight, correlator, file checking |
+| [Maude](https://github.com/unpingable/maude) | TUI client for the governor daemon (Textual) |
 
 ---
 

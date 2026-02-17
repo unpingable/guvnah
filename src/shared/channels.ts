@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /** IPC channel names — single source of truth for main, preload, and renderer. */
 
 export const Channels = {

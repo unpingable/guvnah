@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * HTTP client for the Governor daemon (gov-webui).
  * Same endpoints + shapes as the governor HTTP adapter.

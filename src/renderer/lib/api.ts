@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Typed wrapper over window.governor IPC.
  * Renderer code imports this instead of touching window.governor directly.

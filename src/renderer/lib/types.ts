@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Re-export shared types for renderer convenience.
  * Also defines renderer-only types (view state, UI models).

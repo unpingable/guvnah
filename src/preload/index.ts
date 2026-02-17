@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Preload script — contextBridge exposes typed API to renderer.
  * Renderer NEVER touches Node APIs. All system access through this bridge.

@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <script lang="ts">
   let { value = 0, label = '' }: { value: number; label?: string } = $props();
 

@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <script lang="ts">
   import { formatRelative, truncate } from '$lib/format';
   import * as sessionStore from '../stores/sessions';

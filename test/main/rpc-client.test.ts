@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Tests for RPC client — Content-Length framing + JSON-RPC transport.
  * Tests the protocol layer (FrameParser, encodeMessage) and the GovernorClient API.

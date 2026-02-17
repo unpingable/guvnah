@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Electron main process — app lifecycle, BrowserWindow, tray.
  * All system access isolated here for Tauri migration.

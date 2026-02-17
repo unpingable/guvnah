@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <script lang="ts">
   import VerdictBadge from '../components/VerdictBadge.svelte';
   import { api } from '$lib/api';

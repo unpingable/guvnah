@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <script lang="ts">
   type ConnectionState = 'connected' | 'degraded' | 'disconnected';
 

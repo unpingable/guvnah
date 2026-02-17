@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * JSON-RPC 2.0 client for the Governor daemon.
  * Replaces HTTP client — speaks Content-Length framed JSON-RPC over child process stdio.

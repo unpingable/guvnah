@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /** Types shared between main process and renderer. */
 
 // --- Health ---

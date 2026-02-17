@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * IPC handler registration — wires all channels to GovernorClient methods.
  * Each handler is a thin forwarding layer; no business logic here.

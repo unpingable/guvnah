@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Health polling with reconnect logic.
  * Periodically pings the Governor daemon and emits connection state changes.

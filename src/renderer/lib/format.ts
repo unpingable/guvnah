@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /** Formatting utilities for dates, verdicts, stiffness levels. */
 
 export function formatTimestamp(iso: string): string {
