@@ -1,6 +1,6 @@
 {
   "name": "guvnah",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Local desktop cockpit for the Governor — renders intent forms, displays receipts, mediates commits. Has no authority of its own.",
   "author": "James Beck",
   "private": true,
