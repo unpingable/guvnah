@@ -37,6 +37,34 @@ export const Channels = {
   COMMIT_REVISE: 'commit:revise',
   COMMIT_PROCEED: 'commit:proceed',
   COMMIT_EXCEPTIONS: 'commit:exceptions',
+
+  // Operator
+  OPERATOR_SNAPSHOT: 'operator:snapshot',
+
+  // Correlator telemetry
+  CORRELATOR_STATUS: 'correlator:status',
+  CORRELATOR_HISTORY: 'correlator:history',
+  CORRELATOR_KVECTOR: 'correlator:kvector',
+
+  // Receipts v1
+  RECEIPTS_V1_LIST: 'receipts_v1:list',
+  RECEIPTS_V1_DETAIL: 'receipts_v1:detail',
+  RECEIPTS_V1_VERIFY: 'receipts_v1:verify',
+
+  // Trace
+  TRACE_TAIL: 'trace:tail',
+
+  // Claims (claim↔receipt correlation)
+  CLAIMS_LIST: 'claims:list',
+  CLAIMS_DETAIL: 'claims:detail',
+  CLAIMS_FOR_RECEIPT: 'claims:for_receipt',
+  CLAIMS_WINDOW: 'claims:window',
+  CLAIMS_STATS: 'claims:stats',
+
+  // Chain composition (Phase 2C/2D)
+  CHAIN_PREFLIGHT: 'chain:preflight',
+  CHAIN_RECORD: 'chain:record',
+  CHAIN_STATUS: 'chain:status',
 } as const;
 
 export type Channel = (typeof Channels)[keyof typeof Channels];

@@ -28,7 +28,30 @@ export type {
   PendingViolation,
   ResolutionResult,
   ExceptionRecord,
+  FidelityProxy,
+  KVector,
+  IndicatorState,
+  CorrelatorMetrics,
+  IndicatorDetail,
+  CorrelatorDiagnostic,
+  CorrelatorStatus,
+  ReceiptV1,
+  ReceiptV1VerifyResult,
+  OperatorCheck,
+  OperatorSnapshot,
+  TraceEvent,
+  TraceResponse,
+  ClaimVerificationSummary,
+  ReceiptLink,
+  ReceiptStub,
+  ClaimDetail,
+  ClaimsWindow,
+  ClaimsStats,
+  ChainBlockReason,
+  ChainPreflightDecision,
+  ChainRecordResult,
+  ChainStatus,
 } from '../../shared/types';
 
 /** Active view in the main content area */
-export type View = 'sessions' | 'intent' | 'receipts' | 'scars' | 'commit';
+export type View = 'sessions' | 'intent' | 'receipts' | 'scars' | 'commit' | 'integrity';

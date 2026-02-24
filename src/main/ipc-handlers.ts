@@ -113,4 +113,92 @@ export function registerIpcHandlers(client: GovernorClient, monitor: ConnectionM
   ipcMain.handle(Channels.COMMIT_EXCEPTIONS, async () => {
     return client.commitExceptions();
   });
+
+  // --- Operator ---
+
+  ipcMain.handle(Channels.OPERATOR_SNAPSHOT, async () => {
+    return client.operatorSnapshot();
+  });
+
+  // --- Correlator Telemetry ---
+
+  ipcMain.handle(Channels.CORRELATOR_STATUS, async () => {
+    return client.correlatorStatus();
+  });
+
+  ipcMain.handle(Channels.CORRELATOR_HISTORY, async (_event, limit?: number) => {
+    return client.correlatorHistory(limit);
+  });
+
+  ipcMain.handle(Channels.CORRELATOR_KVECTOR, async () => {
+    return client.correlatorKvector();
+  });
+
+  // --- Receipts v1 ---
+
+  ipcMain.handle(Channels.RECEIPTS_V1_LIST, async (_event, limit?: number) => {
+    return client.receiptsV1List(limit);
+  });
+
+  ipcMain.handle(Channels.RECEIPTS_V1_DETAIL, async (_event, receiptId: string) => {
+    return client.receiptsV1Detail(receiptId);
+  });
+
+  ipcMain.handle(Channels.RECEIPTS_V1_VERIFY, async () => {
+    return client.receiptsV1Verify();
+  });
+
+  // --- Trace ---
+
+  ipcMain.handle(Channels.TRACE_TAIL, async (_event, limit?: number) => {
+    return client.traceTail(limit);
+  });
+
+  // --- Claims ---
+
+  ipcMain.handle(Channels.CLAIMS_LIST, async (_event, opts?: { run_id?: string; since?: string; limit?: number }) => {
+    return client.claimsList(opts);
+  });
+
+  ipcMain.handle(Channels.CLAIMS_DETAIL, async (_event, claimId: string) => {
+    return client.claimsDetail(claimId);
+  });
+
+  ipcMain.handle(Channels.CLAIMS_FOR_RECEIPT, async (_event, receiptId: string) => {
+    return client.claimsForReceipt(receiptId);
+  });
+
+  ipcMain.handle(Channels.CLAIMS_WINDOW, async (_event, since: string, until?: string, limit?: number) => {
+    return client.claimsWindow(since, until, limit);
+  });
+
+  ipcMain.handle(Channels.CLAIMS_STATS, async () => {
+    return client.claimsStats();
+  });
+
+  // --- Chain Composition ---
+
+  ipcMain.handle(Channels.CHAIN_PREFLIGHT, async (
+    _event,
+    toolId: string,
+    correlationId: string,
+    args?: Record<string, unknown>,
+    exceptions?: string[],
+  ) => {
+    return client.chainPreflight(toolId, correlationId, args, exceptions);
+  });
+
+  ipcMain.handle(Channels.CHAIN_RECORD, async (
+    _event,
+    toolId: string,
+    correlationId: string,
+    resultStatus: string,
+    opts?: { args?: Record<string, unknown>; preflightToken?: string; recordId?: string },
+  ) => {
+    return client.chainRecord(toolId, correlationId, resultStatus, opts);
+  });
+
+  ipcMain.handle(Channels.CHAIN_STATUS, async (_event, correlationId?: string) => {
+    return client.chainStatus(correlationId);
+  });
 }

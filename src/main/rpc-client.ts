@@ -25,6 +25,20 @@ import type {
   PendingViolation,
   ResolutionResult,
   ExceptionRecord,
+  OperatorSnapshot,
+  CorrelatorStatus,
+  CorrelatorDiagnostic,
+  KVector,
+  ReceiptV1,
+  ReceiptV1VerifyResult,
+  TraceResponse,
+  ClaimVerificationSummary,
+  ClaimDetail,
+  ClaimsWindow,
+  ClaimsStats,
+  ChainPreflightDecision,
+  ChainRecordResult,
+  ChainStatus,
 } from '../shared/types.js';
 
 // ---------------------------------------------------------------------------
@@ -456,5 +470,111 @@ export class GovernorClient {
   async commitExceptions(): Promise<ExceptionRecord[]> {
     const raw = await this.transport.call<Record<string, unknown>[]>('commit.exceptions');
     return raw.map(adaptExceptionRecord);
+  }
+
+  // --- Operator ---
+
+  async operatorSnapshot(): Promise<OperatorSnapshot> {
+    return this.transport.call('operator.snapshot');
+  }
+
+  // --- Correlator Telemetry ---
+
+  async correlatorStatus(): Promise<CorrelatorStatus> {
+    return this.transport.call('correlator.status');
+  }
+
+  async correlatorHistory(limit?: number): Promise<CorrelatorDiagnostic[]> {
+    return this.transport.call('correlator.history', { limit });
+  }
+
+  async correlatorKvector(): Promise<KVector> {
+    return this.transport.call('correlator.kvector');
+  }
+
+  // --- Receipts v1 ---
+
+  async receiptsV1List(limit?: number): Promise<ReceiptV1[]> {
+    return this.transport.call('receipts_v1.list', { limit });
+  }
+
+  async receiptsV1Detail(receiptId: string): Promise<ReceiptV1> {
+    return this.transport.call('receipts_v1.detail', { receipt_id: receiptId });
+  }
+
+  async receiptsV1Verify(): Promise<ReceiptV1VerifyResult> {
+    return this.transport.call('receipts_v1.verify');
+  }
+
+  // --- Trace ---
+
+  async traceTail(limit?: number): Promise<TraceResponse> {
+    return this.transport.call('trace.tail', { limit });
+  }
+
+  // --- Claims ---
+
+  async claimsList(opts?: { run_id?: string; since?: string; limit?: number }): Promise<ClaimVerificationSummary[]> {
+    return this.transport.call('claims.list', opts ?? {});
+  }
+
+  async claimsDetail(claimId: string): Promise<ClaimDetail> {
+    return this.transport.call('claims.detail', { claim_id: claimId });
+  }
+
+  async claimsForReceipt(receiptId: string): Promise<ClaimVerificationSummary[]> {
+    return this.transport.call('claims.for_receipt', { receipt_id: receiptId });
+  }
+
+  async claimsWindow(since: string, until?: string, limit?: number): Promise<ClaimsWindow> {
+    return this.transport.call('claims.window', { since, until, limit });
+  }
+
+  async claimsStats(): Promise<ClaimsStats> {
+    return this.transport.call('claims.stats');
+  }
+
+  // --- Chain Composition ---
+
+  async chainPreflight(
+    toolId: string,
+    correlationId: string,
+    args?: Record<string, unknown>,
+    exceptions?: string[],
+  ): Promise<ChainPreflightDecision> {
+    const params: Record<string, unknown> = {
+      tool_id: toolId,
+      correlation_id: correlationId,
+    };
+    if (args) params.args = args;
+    if (exceptions) params.exceptions = exceptions;
+    return this.transport.call('chain.preflight', params);
+  }
+
+  async chainRecord(
+    toolId: string,
+    correlationId: string,
+    resultStatus: string,
+    opts?: {
+      args?: Record<string, unknown>;
+      preflightToken?: string;
+      recordId?: string;
+    },
+  ): Promise<ChainRecordResult> {
+    const params: Record<string, unknown> = {
+      tool_id: toolId,
+      correlation_id: correlationId,
+      result_status: resultStatus,
+    };
+    if (opts?.args) params.args = opts.args;
+    if (opts?.preflightToken) params.preflight_token = opts.preflightToken;
+    if (opts?.recordId) params.record_id = opts.recordId;
+    return this.transport.call('chain.record', params);
+  }
+
+  async chainStatus(correlationId?: string): Promise<ChainStatus> {
+    const params: Record<string, unknown> = {};
+    if (correlationId) params.correlation_id = correlationId;
+    return this.transport.call('chain.status', params);
   }
 }

@@ -139,6 +139,7 @@ describe('GovernorClient API', () => {
       'listScars', 'scarsHistory',
       'commitPending', 'commitFix', 'commitRevise', 'commitProceed', 'commitExceptions',
       'start', 'stop', 'setBaseUrl', 'setGovernorDir',
+      'chainPreflight', 'chainRecord', 'chainStatus',
     ];
 
     for (const method of expectedMethods) {
@@ -412,5 +413,209 @@ describe('Shape adapters (via GovernorClient internals)', () => {
     const result = await client.commitExceptions();
     expect(result[0].violation_id).toBe('');
     expect(result[0].action).toBe('proceed');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Chain composition tests (Phase 2C/2D)
+// ---------------------------------------------------------------------------
+
+describe('Chain composition RPCs', () => {
+  async function clientWithMock() {
+    const mod = await import('../../src/main/rpc-client');
+    const client = new mod.GovernorClient('/tmp/test');
+
+    const calls: { method: string; params: Record<string, unknown> }[] = [];
+    const responses = new Map<string, unknown>();
+    const mockTransport = {
+      get isRunning() { return true; },
+      start() {},
+      stop() {},
+      async call<T>(method: string, params?: Record<string, unknown>): Promise<T> {
+        calls.push({ method, params: params ?? {} });
+        if (!responses.has(method)) throw new Error(`No mock for ${method}`);
+        return responses.get(method) as T;
+      },
+    };
+
+    (client as unknown as { transport: unknown }).transport = mockTransport;
+    return { client, responses, calls };
+  }
+
+  it('chainPreflight calls chain.preflight with correct params', async () => {
+    const { client, responses, calls } = await clientWithMock();
+    responses.set('chain.preflight', {
+      decision: 'allow',
+      mode: 'detect_only',
+      kernel_verdict: 'allow',
+      effective_verdict: 'allow',
+      composition_match: false,
+      matched_rule_ids: [],
+      block_reasons: [],
+      history_length: 3,
+      action_log_hash: 'a'.repeat(64),
+      proposed_step_hash: 'b'.repeat(64),
+      preflight_token: 'c'.repeat(64),
+      verdict_reason: 'allow',
+      correlation_id: 'task-1',
+    });
+
+    const result = await client.chainPreflight('read_file', 'task-1', { path: '/etc/passwd' });
+    expect(result.decision).toBe('allow');
+    expect(result.mode).toBe('detect_only');
+    expect(result.history_length).toBe(3);
+    expect(result.correlation_id).toBe('task-1');
+
+    expect(calls[0].method).toBe('chain.preflight');
+    expect(calls[0].params.tool_id).toBe('read_file');
+    expect(calls[0].params.correlation_id).toBe('task-1');
+    expect(calls[0].params.args).toEqual({ path: '/etc/passwd' });
+  });
+
+  it('chainPreflight returns blocked decision with block reasons', async () => {
+    const { client, responses } = await clientWithMock();
+    responses.set('chain.preflight', {
+      decision: 'blocked',
+      mode: 'enforce',
+      kernel_verdict: 'deny',
+      effective_verdict: 'deny',
+      composition_match: true,
+      matched_rule_ids: ['exfil-001'],
+      block_reasons: [
+        { rule_id: 'exfil-001', message: 'Egress after secret read' },
+      ],
+      history_length: 2,
+      action_log_hash: 'a'.repeat(64),
+      proposed_step_hash: 'b'.repeat(64),
+      preflight_token: 'c'.repeat(64),
+      verdict_reason: 'deny: composition match',
+      correlation_id: 'task-2',
+    });
+
+    const result = await client.chainPreflight('http_post', 'task-2');
+    expect(result.decision).toBe('blocked');
+    expect(result.composition_match).toBe(true);
+    expect(result.block_reasons).toHaveLength(1);
+    expect(result.block_reasons[0].rule_id).toBe('exfil-001');
+  });
+
+  it('chainPreflight passes exceptions when provided', async () => {
+    const { client, responses, calls } = await clientWithMock();
+    responses.set('chain.preflight', { decision: 'allow', mode: 'detect_only' });
+
+    await client.chainPreflight('http_post', 'task-3', undefined, ['rule-1']);
+    expect(calls[0].params.exceptions).toEqual(['rule-1']);
+    expect(calls[0].params.args).toBeUndefined();
+  });
+
+  it('chainRecord calls chain.record with correct params', async () => {
+    const { client, responses, calls } = await clientWithMock();
+    responses.set('chain.record', {
+      recorded: true,
+      correlation_id: 'task-1',
+      history_length: 4,
+      action_log_hash: 'd'.repeat(64),
+      record_id: 'rid-001',
+      idempotent_replay: false,
+    });
+
+    const result = await client.chainRecord('read_file', 'task-1', 'ok', {
+      args: { path: '/src/main.py' },
+      preflightToken: 'tok-abc',
+      recordId: 'rid-001',
+    });
+    expect(result.recorded).toBe(true);
+    expect(result.history_length).toBe(4);
+    expect(result.record_id).toBe('rid-001');
+
+    expect(calls[0].method).toBe('chain.record');
+    expect(calls[0].params.tool_id).toBe('read_file');
+    expect(calls[0].params.correlation_id).toBe('task-1');
+    expect(calls[0].params.result_status).toBe('ok');
+    expect(calls[0].params.preflight_token).toBe('tok-abc');
+    expect(calls[0].params.record_id).toBe('rid-001');
+  });
+
+  it('chainRecord omits optional params when not provided', async () => {
+    const { client, responses, calls } = await clientWithMock();
+    responses.set('chain.record', {
+      recorded: true,
+      correlation_id: 'task-1',
+      history_length: 1,
+      action_log_hash: 'e'.repeat(64),
+      idempotent_replay: false,
+    });
+
+    await client.chainRecord('write_file', 'task-1', 'ok');
+    expect(calls[0].params.preflight_token).toBeUndefined();
+    expect(calls[0].params.record_id).toBeUndefined();
+    expect(calls[0].params.args).toBeUndefined();
+  });
+
+  it('chainRecord handles idempotent replay', async () => {
+    const { client, responses } = await clientWithMock();
+    responses.set('chain.record', {
+      recorded: true,
+      correlation_id: 'task-1',
+      history_length: 4,
+      record_id: 'rid-001',
+      idempotent_replay: true,
+    });
+
+    const result = await client.chainRecord('read_file', 'task-1', 'ok', { recordId: 'rid-001' });
+    expect(result.idempotent_replay).toBe(true);
+  });
+
+  it('chainStatus calls chain.status', async () => {
+    const { client, responses, calls } = await clientWithMock();
+    responses.set('chain.status', {
+      load_status: 'loaded',
+      rule_count: 3,
+      rule_set_version: '1.0.0',
+      content_hash: 'f'.repeat(64),
+      mode: 'enforce',
+      log_exists: true,
+      history_length: 5,
+      action_log_hash: 'g'.repeat(64),
+    });
+
+    const result = await client.chainStatus('task-1');
+    expect(result.load_status).toBe('loaded');
+    expect(result.rule_count).toBe(3);
+    expect(result.mode).toBe('enforce');
+    expect(result.log_exists).toBe(true);
+    expect(result.history_length).toBe(5);
+
+    expect(calls[0].method).toBe('chain.status');
+    expect(calls[0].params.correlation_id).toBe('task-1');
+  });
+
+  it('chainStatus works without correlation_id', async () => {
+    const { client, responses, calls } = await clientWithMock();
+    responses.set('chain.status', {
+      load_status: 'missing_policy',
+      rule_count: 0,
+      mode: 'detect_only',
+    });
+
+    const result = await client.chainStatus();
+    expect(result.load_status).toBe('missing_policy');
+    expect(calls[0].params.correlation_id).toBeUndefined();
+  });
+
+  it('chainPreflight tolerates extra fields from daemon', async () => {
+    const { client, responses } = await clientWithMock();
+    responses.set('chain.preflight', {
+      decision: 'allow',
+      mode: 'detect_only',
+      dedupe: { candidates: {}, counts: {} },
+      policy_fragment: { applied: false },
+      some_future_field: 42,
+    });
+
+    const result = await client.chainPreflight('read_file', 'task-1');
+    expect(result.decision).toBe('allow');
+    // Extra fields are accessible via index signature
+    expect(result['dedupe']).toBeDefined();
   });
 });

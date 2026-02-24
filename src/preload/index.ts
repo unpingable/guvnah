@@ -39,6 +39,28 @@ const api: GovernorAPI = {
   commitRevise: () => ipcRenderer.invoke(Channels.COMMIT_REVISE),
   commitProceed: (reason: string) => ipcRenderer.invoke(Channels.COMMIT_PROCEED, reason),
   commitExceptions: () => ipcRenderer.invoke(Channels.COMMIT_EXCEPTIONS),
+
+  operatorSnapshot: () => ipcRenderer.invoke(Channels.OPERATOR_SNAPSHOT),
+  correlatorStatus: () => ipcRenderer.invoke(Channels.CORRELATOR_STATUS),
+  correlatorHistory: (limit?: number) => ipcRenderer.invoke(Channels.CORRELATOR_HISTORY, limit),
+  correlatorKvector: () => ipcRenderer.invoke(Channels.CORRELATOR_KVECTOR),
+  receiptsV1List: (limit?: number) => ipcRenderer.invoke(Channels.RECEIPTS_V1_LIST, limit),
+  receiptsV1Detail: (receiptId: string) => ipcRenderer.invoke(Channels.RECEIPTS_V1_DETAIL, receiptId),
+  receiptsV1Verify: () => ipcRenderer.invoke(Channels.RECEIPTS_V1_VERIFY),
+  traceTail: (limit?: number) => ipcRenderer.invoke(Channels.TRACE_TAIL, limit),
+
+  claimsList: (opts?) => ipcRenderer.invoke(Channels.CLAIMS_LIST, opts),
+  claimsDetail: (claimId: string) => ipcRenderer.invoke(Channels.CLAIMS_DETAIL, claimId),
+  claimsForReceipt: (receiptId: string) => ipcRenderer.invoke(Channels.CLAIMS_FOR_RECEIPT, receiptId),
+  claimsWindow: (since: string, until?: string, limit?: number) => ipcRenderer.invoke(Channels.CLAIMS_WINDOW, since, until, limit),
+  claimsStats: () => ipcRenderer.invoke(Channels.CLAIMS_STATS),
+
+  chainPreflight: (toolId: string, correlationId: string, args?: Record<string, unknown>, exceptions?: string[]) =>
+    ipcRenderer.invoke(Channels.CHAIN_PREFLIGHT, toolId, correlationId, args, exceptions),
+  chainRecord: (toolId: string, correlationId: string, resultStatus: string, opts?: { args?: Record<string, unknown>; preflightToken?: string; recordId?: string }) =>
+    ipcRenderer.invoke(Channels.CHAIN_RECORD, toolId, correlationId, resultStatus, opts),
+  chainStatus: (correlationId?: string) =>
+    ipcRenderer.invoke(Channels.CHAIN_STATUS, correlationId),
 };
 
 contextBridge.exposeInMainWorld('governor', api);
