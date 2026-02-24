@@ -2,7 +2,7 @@
 
 **Desktop cockpit for the [Agent Governor](https://github.com/unpingable/agent_governor). See everything. Control nothing.**
 
-Guvnah renders the governor's state — sessions, receipts, scars, violations, intent forms. It has no authority of its own. The governor daemon is the judge; Guvnah is the courtroom sketch artist.
+Guvnah renders the governor's state — sessions, receipts, scars, violations, intent forms, execution integrity, claim verification. It has no authority of its own. The governor daemon is the judge; Guvnah is the courtroom sketch artist.
 
 ---
 
@@ -37,6 +37,7 @@ You're running Agent Governor to constrain your AI coding tools. The governor pr
 │  │     Svelte 5 Renderer       │    │
 │  │  Sessions │ Intent │ Scars  │    │
 │  │  Receipts │ Commit/Waive    │    │
+│  │  Execution Integrity        │    │
 │  └─────────────────────────────┘    │
 └─────────────────────────────────────┘
 ```
@@ -49,7 +50,7 @@ You're running Agent Governor to constrain your AI coding tools. The governor pr
 
 ## What's In The Box
 
-### 5 Views
+### 6 Views
 
 | View | What It Shows | Daemon Methods |
 |------|--------------|----------------|
@@ -58,6 +59,20 @@ You're running Agent Governor to constrain your AI coding tools. The governor pr
 | **Receipts Inspector** | Gate receipts with evidence bundles, filterable by gate/verdict | `receipts.*` |
 | **Scars Timeline** | Failure history, scar stiffness, active shields | `scars.*` |
 | **Commit/Waive** | Pending violations with fix/revise/proceed resolution | `commit.*` |
+| **Execution Integrity** | K-vector fidelity, capture indicators, regime timeline, receipt chain, claim verification | `operator.*`, `correlator.*`, `receipts_v1.*`, `trace.*`, `claims.*` |
+
+### Execution Integrity
+
+The sixth view. Makes runtime failure geometry and claim verification visible in real time.
+
+- **Status summary** — Regime pill, operator checks, counts, suggestions
+- **Claim vs Verified** — Agent said X, receipts show Y. Status pills (verified / partial / contradicted / unverified), recent claims table, click-to-expand detail with linked receipts and roles
+- **Fidelity / Throughput** — 4 K-vector dimensions with SVG sparklines. No scalarization — all 4 dimensions always visible
+- **Capture Indicators** — Binding indicator streaks and gate flags. Thresholds come from the daemon, not the UI
+- **Regime Strip** — Dual-band timeline (correlator + operational regimes) with trace event markers
+- **Receipt Chain** — Hash-chained v1 receipts with gap detection and verification status
+
+Panel-level error isolation: one RPC failure shows "unavailable" on that panel. The rest of the screen keeps working. Older daemons missing newer RPCs degrade gracefully.
 
 ### Stack
 
@@ -69,7 +84,7 @@ You're running Agent Governor to constrain your AI coding tools. The governor pr
 
 ### Tests
 
-- **78 unit tests** (vitest) — RPC client, IPC handlers, shape adapters, components, format utils, runes guard
+- **123 unit tests** (vitest) — RPC client, IPC handlers, shape adapters, components, format utils, integrity stores, claims, chain composition, runes guard
 - **2 E2E tests** (Playwright Electron) — Daemon boots + session list renders
 
 ---
@@ -111,6 +126,45 @@ npm run dist             # Electron Builder (distributable)
 
 ---
 
+## How It Connects
+
+The governor daemon (`governor serve --stdio`) is a JSON-RPC 2.0 server. Guvnah spawns it as a child process and talks Content-Length framed JSON-RPC over stdin/stdout.
+
+```
+Guvnah (Electron)              Governor Daemon (Python)
+─────────────────              ────────────────────────
+rpc-client.ts          ←stdio→  daemon.py
+  ├─ governor.hello              ├─ DaemonState
+  ├─ governor.now/status         ├─ SessionStore
+  ├─ sessions.*                  ├─ ReceiptStore
+  ├─ intent.*                    ├─ ScarLedger
+  ├─ receipts.* / receipts_v1.* ├─ ViolationResolver
+  ├─ scars.*                     ├─ IntentCompiler
+  ├─ commit.*                    ├─ CorrelatorTelemetry
+  ├─ operator.snapshot           ├─ ClaimCorrelation
+  ├─ correlator.*                ├─ ChainGate
+  ├─ trace.tail                  ├─ ScopeGovernor
+  ├─ claims.*                    ├─ SemanticStability
+  └─ chain.*                     └─ PolicyEngine
+```
+
+34 daemon RPC methods wired. Shape adapters in `rpc-client.ts` translate daemon Python shapes to renderer TypeScript types. This is the sole compatibility seam — when shapes change, you fix it in one place.
+
+### Not Yet Wired
+
+The daemon exposes additional subsystems that Guvnah doesn't render yet:
+
+| Namespace | Methods | What It Would Show |
+|-----------|---------|-------------------|
+| `governor.selfcheck` | 1 | Deployment health checks |
+| `scope.*` | 4 | Locality policy: grants, contracts, escalation history |
+| `stability.*` | 4 | Semantic stability: perturbation audits, stiffness, anisotropy |
+| `policy.*` | 3 | Policy evaluation and capabilities |
+| `lanes.*` | 3 | Routing: complexity → model tier → capability contract |
+| `chat.*` | 3 | Chat generation (intentionally omitted — Guvnah observes, doesn't generate) |
+
+---
+
 ## File Structure
 
 ```
@@ -134,24 +188,31 @@ src/
 │   │   ├── StiffnessIndicator.svelte
 │   │   ├── VerdictBadge.svelte
 │   │   ├── FormField.svelte
-│   │   └── JsonTree.svelte
+│   │   ├── JsonTree.svelte
+│   │   ├── CaptureIndicators.svelte  # Binding indicators + gate flags
+│   │   ├── ClaimsPanel.svelte        # Claim vs Verified panel + detail drawer
+│   │   ├── FidelityPanel.svelte      # K-vector bars + sparklines
+│   │   ├── ReceiptChain.svelte       # Hash-chained receipt timeline
+│   │   └── RegimeStrip.svelte        # Dual-band regime timeline
 │   ├── views/                   # Page-level views
 │   │   ├── SessionPicker.svelte
 │   │   ├── IntentModal.svelte
 │   │   ├── ReceiptsInspector.svelte
 │   │   ├── ScarsTimeline.svelte
-│   │   └── CommitWaive.svelte
+│   │   ├── CommitWaive.svelte
+│   │   └── ExecutionIntegrity.svelte # 6th view: integrity dashboard
 │   ├── stores/                  # Reactive state (*.svelte.ts for runes)
 │   │   ├── connection.svelte.ts
 │   │   ├── governor.svelte.ts
 │   │   ├── sessions.svelte.ts
 │   │   ├── intent.svelte.ts
 │   │   ├── receipts.svelte.ts
-│   │   └── scars.svelte.ts
+│   │   ├── scars.svelte.ts
+│   │   └── integrity.svelte.ts  # Execution Integrity + claims
 │   ├── lib/                     # Utilities
 │   │   ├── api.ts               # window.governor proxy
 │   │   ├── types.ts             # Renderer-specific type aliases
-│   │   └── format.ts            # Time, verdict, stiffness formatters
+│   │   └── format.ts            # Time, verdict, stiffness, regime, claim formatters
 │   └── styles/
 │       ├── tokens.css           # Design tokens
 │       └── components.css       # Shared component styles
@@ -159,51 +220,20 @@ src/
 │   ├── channels.ts              # IPC channel name constants
 │   └── types.ts                 # TypeScript interfaces (GovernorAPI, etc.)
 ├── test/                        # Unit tests (vitest)
+│   ├── fixtures/
+│   │   └── integrity-payloads.ts    # Daemon-shaped test fixtures
 │   ├── main/
 │   │   ├── rpc-client.test.ts
 │   │   ├── governor-client.test.ts
-│   │   └── ipc-handlers.test.ts
+│   │   ├── ipc-handlers.test.ts
+│   │   └── ipc-handlers-integrity.test.ts
 │   └── renderer/
 │       ├── components.test.ts
-│       └── stores.test.ts
+│       ├── stores.test.ts
+│       └── integrity-stores.test.ts
 └── tests/e2e/                   # Playwright Electron tests
     └── smoke.spec.ts
 ```
-
----
-
-## How It Connects
-
-The governor daemon (`governor serve --stdio`) is a JSON-RPC 2.0 server that exposes the full governor API:
-
-```
-Guvnah (Electron)              Governor Daemon (Python)
-─────────────────              ────────────────────────
-rpc-client.ts          ←stdio→  daemon.py
-  ├─ governor.hello              ├─ DaemonState
-  ├─ governor.now                ├─ SessionStore
-  ├─ governor.status             ├─ ReceiptStore
-  ├─ sessions.*                  ├─ ScarLedger
-  ├─ intent.*                    ├─ ViolationResolver
-  ├─ receipts.*                  ├─ IntentCompiler
-  ├─ scars.*                     ├─ CorrelatorTelemetry
-  └─ commit.*                    ├─ ScopeGovernor
-                                 └─ SemanticStability
-```
-
-21 of 36 daemon RPC methods wired. Shape adapters in `rpc-client.ts` translate daemon Python shapes to renderer TypeScript types. This is the sole compatibility seam — when shapes change, you fix it in one place.
-
-### Not Yet Wired
-
-The daemon exposes additional subsystems that Guvnah doesn't render yet:
-
-| Namespace | Methods | What It Would Show |
-|-----------|---------|-------------------|
-| `governor.selfcheck` | 1 | Deployment health checks |
-| `correlator.*` | 3 | Capture detection: K-vector (T/F/A/C), regime, indicators |
-| `scope.*` | 4 | Locality policy: grants, contracts, escalation history |
-| `stability.*` | 3 | Semantic stability: perturbation audits, stiffness, anisotropy |
-| `chat.*` | 4 | Chat generation (intentionally omitted — Guvnah observes, doesn't generate) |
 
 ---
 
