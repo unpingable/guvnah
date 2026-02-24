@@ -7,6 +7,7 @@
   import ReceiptsInspector from './views/ReceiptsInspector.svelte';
   import ScarsTimeline from './views/ScarsTimeline.svelte';
   import CommitWaive from './views/CommitWaive.svelte';
+  import ExecutionIntegrity from './views/ExecutionIntegrity.svelte';
   import type { View } from '$lib/types';
   import * as connStore from './stores/connection';
   import * as govStore from './stores/governor';
@@ -44,6 +45,8 @@
         <ScarsTimeline />
       {:else if activeView === 'commit'}
         <CommitWaive />
+      {:else if activeView === 'integrity'}
+        <ExecutionIntegrity />
       {/if}
     </div>
     <StatusBar {now} {status} {connectionState} />

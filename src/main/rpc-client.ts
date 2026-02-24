@@ -39,6 +39,9 @@ import type {
   ChainPreflightDecision,
   ChainRecordResult,
   ChainStatus,
+  ChainEvalResult,
+  ChainRulesResult,
+  ChainResetResult,
 } from '../shared/types.js';
 
 // ---------------------------------------------------------------------------
@@ -576,5 +579,30 @@ export class GovernorClient {
     const params: Record<string, unknown> = {};
     if (correlationId) params.correlation_id = correlationId;
     return this.transport.call('chain.status', params);
+  }
+
+  async chainEvaluate(
+    toolId: string,
+    correlationId: string,
+    args?: Record<string, unknown>,
+    resultStatus?: string,
+    exceptions?: string[],
+  ): Promise<ChainEvalResult> {
+    const params: Record<string, unknown> = {
+      tool_id: toolId,
+      correlation_id: correlationId,
+    };
+    if (args) params.args = args;
+    if (resultStatus) params.result_status = resultStatus;
+    if (exceptions) params.exceptions = exceptions;
+    return this.transport.call('chain.evaluate', params);
+  }
+
+  async chainRules(): Promise<ChainRulesResult> {
+    return this.transport.call('chain.rules');
+  }
+
+  async chainReset(correlationId: string): Promise<ChainResetResult> {
+    return this.transport.call('chain.reset', { correlation_id: correlationId });
   }
 }

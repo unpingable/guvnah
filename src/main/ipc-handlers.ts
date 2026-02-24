@@ -201,4 +201,23 @@ export function registerIpcHandlers(client: GovernorClient, monitor: ConnectionM
   ipcMain.handle(Channels.CHAIN_STATUS, async (_event, correlationId?: string) => {
     return client.chainStatus(correlationId);
   });
+
+  ipcMain.handle(Channels.CHAIN_EVALUATE, async (
+    _event,
+    toolId: string,
+    correlationId: string,
+    args?: Record<string, unknown>,
+    resultStatus?: string,
+    exceptions?: string[],
+  ) => {
+    return client.chainEvaluate(toolId, correlationId, args, resultStatus, exceptions);
+  });
+
+  ipcMain.handle(Channels.CHAIN_RULES, async () => {
+    return client.chainRules();
+  });
+
+  ipcMain.handle(Channels.CHAIN_RESET, async (_event, correlationId: string) => {
+    return client.chainReset(correlationId);
+  });
 }

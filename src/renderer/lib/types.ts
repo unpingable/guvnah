@@ -51,6 +51,10 @@ export type {
   ChainPreflightDecision,
   ChainRecordResult,
   ChainStatus,
+  ChainEvalResult,
+  ChainRule,
+  ChainRulesResult,
+  ChainResetResult,
 } from '../../shared/types';
 
 /** Active view in the main content area */

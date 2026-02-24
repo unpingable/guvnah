@@ -83,6 +83,9 @@ function createMockClient() {
     chainPreflight: vi.fn().mockResolvedValue({ decision: 'allow', mode: 'detect_only' }),
     chainRecord: vi.fn().mockResolvedValue({ recorded: true, correlation_id: 'task-1', history_length: 1 }),
     chainStatus: vi.fn().mockResolvedValue({ load_status: 'loaded', rule_count: 3, mode: 'detect_only' }),
+    chainEvaluate: vi.fn().mockResolvedValue({ kernel_verdict: 'allow', effective_verdict: 'allow', mode: 'detect_only', composition_match: false, matched_rule_ids: [], history_length: 1, action_log_hash: 'abc', verdict_reason: 'allow', deprecated: true }),
+    chainRules: vi.fn().mockResolvedValue({ load_status: 'loaded', rule_set_version: 'v1', rule_count: 2, rules: [{ rule_id: 'r1', description: 'test', effect: 'deny', prior_sensitivity_gte: null, prior_capability: null, prior_trust_domain: null, proposed_capability: null, proposed_trust_domain: null, unless_condition: null }] }),
+    chainReset: vi.fn().mockResolvedValue({ reset: true, correlation_id: 'task-1', previous_history_length: 3, log_existed: true }),
   };
 }
 
@@ -118,6 +121,9 @@ describe('IPC Handlers — Integrity channels', () => {
       Channels.CLAIMS_FOR_RECEIPT,
       Channels.CLAIMS_WINDOW,
       Channels.CLAIMS_STATS,
+      Channels.CHAIN_EVALUATE,
+      Channels.CHAIN_RULES,
+      Channels.CHAIN_RESET,
     ];
     const handlers = (ipcMain as unknown as { _handlers: Map<string, unknown> })._handlers;
     for (const channel of integrityChannels) {
@@ -230,5 +236,25 @@ describe('IPC Handlers — Integrity channels', () => {
     const handler = getHandler(Channels.CHAIN_STATUS);
     await handler({}, 'task-3');
     expect(client.chainStatus).toHaveBeenCalledWith('task-3');
+  });
+
+  it('chain:evaluate forwards all params', async () => {
+    const handler = getHandler(Channels.CHAIN_EVALUATE);
+    await handler({}, 'read_file', 'task-4', { path: '/tmp' }, 'ok', ['rule-1']);
+    expect(client.chainEvaluate).toHaveBeenCalledWith('read_file', 'task-4', { path: '/tmp' }, 'ok', ['rule-1']);
+  });
+
+  it('chain:rules forwards to client.chainRules()', async () => {
+    const handler = getHandler(Channels.CHAIN_RULES);
+    const result = await handler({});
+    expect(client.chainRules).toHaveBeenCalled();
+    expect(result.rule_count).toBe(2);
+  });
+
+  it('chain:reset forwards correlationId', async () => {
+    const handler = getHandler(Channels.CHAIN_RESET);
+    const result = await handler({}, 'task-1');
+    expect(client.chainReset).toHaveBeenCalledWith('task-1');
+    expect(result).toEqual({ reset: true, correlation_id: 'task-1', previous_history_length: 3, log_existed: true });
   });
 });

@@ -61,6 +61,10 @@ const api: GovernorAPI = {
     ipcRenderer.invoke(Channels.CHAIN_RECORD, toolId, correlationId, resultStatus, opts),
   chainStatus: (correlationId?: string) =>
     ipcRenderer.invoke(Channels.CHAIN_STATUS, correlationId),
+  chainEvaluate: (toolId: string, correlationId: string, args?: Record<string, unknown>, resultStatus?: string, exceptions?: string[]) =>
+    ipcRenderer.invoke(Channels.CHAIN_EVALUATE, toolId, correlationId, args, resultStatus, exceptions),
+  chainRules: () => ipcRenderer.invoke(Channels.CHAIN_RULES),
+  chainReset: (correlationId: string) => ipcRenderer.invoke(Channels.CHAIN_RESET, correlationId),
 };
 
 contextBridge.exposeInMainWorld('governor', api);

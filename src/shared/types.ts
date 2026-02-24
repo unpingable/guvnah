@@ -443,6 +443,52 @@ export interface ChainStatus {
   [key: string]: unknown;
 }
 
+export interface ChainEvalResult {
+  kernel_verdict: string;
+  effective_verdict: string;
+  mode: string;
+  composition_match: boolean;
+  matched_rule_ids: string[];
+  exception_results: Record<string, boolean>;
+  history_length: number;
+  action_log_hash: string;
+  proposed_step: Record<string, unknown>;
+  verdict_reason: string;
+  policy_fragment?: Record<string, unknown>;
+  dedupe?: Array<{ key: string; count: number; is_repeat: boolean }>;
+  deprecated?: boolean;
+  replacement?: string[];
+  error?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+export interface ChainRule {
+  rule_id: string;
+  description: string;
+  effect: string;
+  prior_sensitivity_gte: string | null;
+  prior_capability: string | null;
+  prior_trust_domain: string | null;
+  proposed_capability: string | null;
+  proposed_trust_domain: string | null;
+  unless_condition: string | null;
+}
+
+export interface ChainRulesResult {
+  load_status: string;
+  rule_set_version: string;
+  rule_count: number;
+  rules: ChainRule[];
+}
+
+export interface ChainResetResult {
+  reset: boolean;
+  correlation_id: string;
+  previous_history_length: number;
+  log_existed: boolean;
+}
+
 // --- Preload API shape ---
 
 export interface GovernorAPI {
@@ -492,4 +538,7 @@ export interface GovernorAPI {
   chainPreflight(toolId: string, correlationId: string, args?: Record<string, unknown>, exceptions?: string[]): Promise<ChainPreflightDecision>;
   chainRecord(toolId: string, correlationId: string, resultStatus: string, opts?: { args?: Record<string, unknown>; preflightToken?: string; recordId?: string }): Promise<ChainRecordResult>;
   chainStatus(correlationId?: string): Promise<ChainStatus>;
+  chainEvaluate(toolId: string, correlationId: string, args?: Record<string, unknown>, resultStatus?: string, exceptions?: string[]): Promise<ChainEvalResult>;
+  chainRules(): Promise<ChainRulesResult>;
+  chainReset(correlationId: string): Promise<ChainResetResult>;
 }

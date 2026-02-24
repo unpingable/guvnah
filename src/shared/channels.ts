@@ -65,6 +65,9 @@ export const Channels = {
   CHAIN_PREFLIGHT: 'chain:preflight',
   CHAIN_RECORD: 'chain:record',
   CHAIN_STATUS: 'chain:status',
+  CHAIN_EVALUATE: 'chain:evaluate',
+  CHAIN_RULES: 'chain:rules',
+  CHAIN_RESET: 'chain:reset',
 } as const;
 
 export type Channel = (typeof Channels)[keyof typeof Channels];

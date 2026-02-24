@@ -15,6 +15,7 @@
     { view: 'receipts', label: 'Receipts', icon: '\u{1F9FE}' },
     { view: 'scars', label: 'Scars', icon: '\u{1FA79}' },
     { view: 'commit', label: 'Commit', icon: '\u{2714}' },
+    { view: 'integrity', label: 'Integrity', icon: '\u{1F6E1}' },
   ];
 </script>
 
